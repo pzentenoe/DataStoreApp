@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -36,12 +38,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            DataStoreAppTheme {
+            val darkModeStore = StoreDarkMode(this)
+            val darkMode = darkModeStore.getDarkMode.collectAsState(initial = false)
+            DataStoreAppTheme(
+                darkTheme = darkMode.value
+            ) {
+
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting()
+                    Greeting(darkModeStore, darkMode.value)
                 }
             }
         }
@@ -49,7 +56,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting() {
+fun Greeting(darkModeStore: StoreDarkMode, darkMode: Boolean) {
     val context = LocalContext.current;
     val scope = rememberCoroutineScope()
     val dataStore = StoreUserEmail(context)
@@ -73,5 +80,24 @@ fun Greeting() {
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = userEmail.value)
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = {
+            scope.launch {
+                if (darkMode) {
+                    darkModeStore.saveDarkMode(false)
+                } else {
+                    darkModeStore.saveDarkMode(true)
+                }
+            }
+        }) {
+            Text(text = "Dark Mode")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Switch(
+            checked = darkMode, onCheckedChange = {checked->
+            scope.launch {
+                darkModeStore.saveDarkMode(checked)
+            }
+        })
     }
 }
